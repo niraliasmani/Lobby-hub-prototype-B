@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>Lobby Hub Version B</title>
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*{box-sizing:border-box}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -50,7 +50,8 @@ body{background:var(--stage);color:var(--ink);font-family:var(--ui);display:flex
 /* Participant view: only the iPad screen, edge to edge */
 body.test{background:#f2f2f7}
 body.test .top,body.test .rail{display:none!important}
-body.test .stage{padding:0;align-items:flex-start}
+body.test .stage{padding:0;align-items:flex-start;overflow:hidden}
+body.test{overscroll-behavior:none}
 body.test #device{border-radius:0;box-shadow:none}
 body.test #device,body.test #device *{-webkit-touch-callout:none;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .fac{position:absolute;inset:0;z-index:80;background:rgba(0,0,0,.35);display:grid;place-items:center}
@@ -155,7 +156,8 @@ body.test #device,body.test #device *{-webkit-touch-callout:none;touch-action:ma
 .primary:disabled{background:rgba(120,120,128,.16) !important;color:rgba(60,60,67,.3) !important;cursor:default}
 
 /* image screens + hotspots */
-.scr{background:#f2f2f7;will-change:transform}
+.scr{background:#f2f2f7;will-change:transform;overflow-y:auto;overflow-x:hidden;scrollbar-width:none}
+.scr::-webkit-scrollbar{display:none}
 .scr.dim-bg{background:rgba(0,0,0,.35)}
 .scr .sheetimg{position:absolute;left:0;bottom:0;border-radius:12px 12px 0 0;overflow:hidden}
 .hs{position:absolute;border-radius:6px}
@@ -632,13 +634,24 @@ function reset(){
  S=fresh();done={};drawTasks();renderList();document.getElementById('hubScroll').scrollTop=0;
 }
 const stage=document.getElementById('stage'),scaler=document.getElementById('scaler');
-function fit(){const r=stage.getBoundingClientRect();const t=document.body.classList.contains('test'),m=t?0:40;const k=Math.min((r.width-m)/744,(r.height-m)/1133,t?1.6:1);D.style.transform=`scale(${k})`;scaler.style.width=744*k+'px';scaler.style.height=1133*k+'px'}
+function fit(){
+ const r=stage.getBoundingClientRect(),t=document.body.classList.contains('test');let k,h=1133;
+ if(t&&r.height>=r.width){k=r.width/744;h=Math.max(900,r.height/k)}   /* portrait: fill the width, stretch to the full height */
+ else if(t){k=r.height/1133}                                            /* landscape: show the whole screen */
+ else{k=Math.min((r.width-40)/744,(r.height-40)/1133,1)}
+ D.style.height=h+'px';D.style.transform=`scale(${k})`;scaler.style.width=744*k+'px';scaler.style.height=h*k+'px';
+}
 new ResizeObserver(fit).observe(stage);fit();
 /* participant view: #test in the address, or launched from the Home Screen */
 function setTest(on){document.body.classList.toggle('test',on);D.classList.remove('hint');fit()}
 const standalone=navigator.standalone===true||matchMedia('(display-mode: standalone)').matches;
-setTest(location.hash==='#test'||standalone);
-addEventListener('hashchange',()=>setTest(location.hash==='#test'||standalone));
+/* iPad (iPadOS Safari reports itself as a Mac with touch) opens straight into the participant view */
+const isTablet=navigator.maxTouchPoints>1&&/iPad|Macintosh/.test(navigator.userAgent);
+const optedOut=()=>{try{return sessionStorage.getItem('hubB.desk')==='1'}catch(e){return false}};
+const wantTest=()=>location.hash==='#test'||standalone||(isTablet&&!optedOut());
+setTest(wantTest());
+addEventListener('hashchange',()=>setTest(wantTest()));
+addEventListener('orientationchange',()=>setTimeout(fit,300));
 document.getElementById('testBtn').onclick=()=>{location.hash='test'};
 /* facilitator menu: press and hold the status bar for 1.5 seconds */
 let holdT;
@@ -649,7 +662,7 @@ function facMenu(){
  f.innerHTML=`<div><p>Facilitator options</p><button data-f="restart">Restart for next participant</button>${standalone?'':'<button data-f="exit">Exit participant view</button>'}<button data-f="close" style="font-weight:600">Close</button></div>`;
  f.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-f]');if(!b&&e.target!==f)return;const a=b?b.dataset.f:'close';f.remove();
   if(a==='restart'){reset();document.querySelector('.stage').scrollTop=0}
-  if(a==='exit'){history.replaceState(null,'',location.pathname+location.search);setTest(false)}});
+  if(a==='exit'){try{sessionStorage.setItem('hubB.desk','1')}catch(e){}history.replaceState(null,'',location.pathname+location.search);setTest(false)}});
  D.appendChild(f);
 }
 reset();

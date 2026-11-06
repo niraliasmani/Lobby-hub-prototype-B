@@ -15,7 +15,7 @@ Open `index.html` in a browser, or turn on GitHub Pages for this repository (Set
 
 The participant view shows only the app screen, edge to edge, with no task panel or toolbar. The iPad mini's screen is the same size the design was drawn at (744 × 1133), so it appears 1:1.
 
-1. On the iPad, open `https://niraliasmani.github.io/Lobby-hub-prototype-B/#test` in Safari.
+1. On the iPad, open `https://niraliasmani.github.io/Lobby-hub-prototype-B/` in Safari. On an iPad it opens straight into the participant view and fills the screen; on a computer, add `#test` to the address to get the same view.
 2. For true full screen, tap Share → **Add to Home Screen**, then launch "Lobby Hub B" from the Home Screen. It opens without Safari's address bar and always in the participant view.
 3. Hold the iPad in portrait and turn on Guided Access (Settings → Accessibility) if you want to stop participants leaving the app.
 
