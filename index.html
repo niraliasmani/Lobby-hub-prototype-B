@@ -313,6 +313,7 @@ function fresh(){return{
 }}
 const G=id=>S.guests.find(g=>g.id===id);
 const full=g=>`Tripp, ${g.first}`;
+const allPicked=()=>S.select&&S.picked.size===S.guests.length;
 
 /* ---------------- hub ---------------- */
 const hub=document.createElement('div');hub.className='layer hub';D.appendChild(hub);
@@ -331,7 +332,7 @@ hub.innerHTML=`
    <div class="leg"><span class="day">Today <span>Mar 05</span></span><div class="fc"><div class="hd"><img src="img/alaska.svg" alt=""><span class="fl"><b>AS 124</b><small>Alaska Airlines</small></span><span class="ot">On Time</span></div><div class="ap"><div><span class="code">SEA<small>C17</small></span><span class="tm">8:00pm</span></div><div><span class="code">HNL<small>A32</small></span><span class="tm">11:00pm</span></div></div></div></div>
    <div class="leg"><span class="day">Today <span>Mar 07</span></span><div class="fc"><div class="hd"><img src="img/hawaiian.svg" alt=""><span class="fl"><b>HA 124</b><small>Hawaiian Airlines</small></span><span class="ot">On Time</span></div><div class="ap"><div><span class="code">HNL<small>C17</small></span><span class="tm">8:00pm</span></div><div><span class="code">NRT<small>A32</small></span><span class="tm">11:00pm</span></div></div></div></div>
   </div>
-  <div class="bar gbar"><div class="left"><h3 id="gcount">4 guests</h3><button class="lnk reg" data-i data-a="select" id="selBtn">Select</button></div><button class="lnk reg" data-i data-a="go:vcr">VCR</button></div>
+  <div class="bar gbar"><div class="left"><h3 id="gcount">4 guests</h3><button class="lnk reg" data-i data-a="select" id="selBtn">Select All</button></div><button class="lnk reg" data-i data-a="go:vcr">VCR</button></div>
   <div class="searchbox">${IC.search}<input id="q" placeholder="Search Guest" autocomplete="off"></div>
   <div class="cards" id="cards"></div>
  </div>
@@ -351,7 +352,7 @@ function renderList(){
  const vis=S.guests.filter(g=>!q||full(g).toLowerCase().includes(q)||g.seat.toLowerCase()===q);
  document.getElementById('cards').innerHTML=vis.map(card).join('')||`<p style="text-align:center;color:rgba(60,60,67,.6);font-size:17px;padding:40px 0">No guests match “${S.search.replace(/</g,'&lt;')}”</p>`;
  document.getElementById('gcount').textContent=S.guests.length+' guests';
- document.getElementById('selBtn').textContent=S.select?'Cancel':'Select';
+ document.getElementById('selBtn').textContent=allPicked()?'Deselect All':'Select All';
  renderBottom();
 }
 function renderBottom(){
@@ -504,8 +505,8 @@ function act(a,el){
   case 'toast':return toast(a.slice(6));
   case 'menu':return menu(v,el);
   case 'bp':return boardingPass();
-  case 'select':S.select=!S.select;S.picked.clear();return renderList();
-  case 'pick':S.picked.has(v)?S.picked.delete(v):S.picked.add(v);return renderList();
+  case 'select':if(allPicked()){S.select=false;S.picked.clear()}else{S.select=true;S.guests.forEach(g=>S.picked.add(g.id))}return renderList();
+  case 'pick':S.picked.has(v)?S.picked.delete(v):S.picked.add(v);if(!S.picked.size)S.select=false;return renderList();
   case 'profile':S.ctx=v;return go('profile');
   case 'seat':S.ctx=v;return go('seats');
   case 'add':S.ctx=v;return menu('add',el);
