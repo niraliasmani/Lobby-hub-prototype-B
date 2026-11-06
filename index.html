@@ -221,6 +221,16 @@ body.test #device,body.test #device *{-webkit-touch-callout:none;touch-action:ma
 .btr.nm{min-height:50px;font-weight:600}
 .btc .lnk{font-size:17px}
 #device .bt-search{margin:0 0 14px}
+.btnote{font-size:13px;color:rgba(60,60,67,.6);padding:0 16px;margin:-4px 0 6px}
+.stp{display:flex;align-items:center;gap:10px;flex:none}
+.stp button{width:32px;height:32px;border-radius:50%;border:1.5px solid #0074c8!important;color:#0074c8!important;display:grid;place-items:center}
+.stp button:disabled{border-color:rgba(60,60,67,.25)!important;color:rgba(60,60,67,.3)!important;cursor:default}
+.stp span{min-width:16px;text-align:center;font-size:17px;font-variant-numeric:tabular-nums}
+.btr.stepr{min-height:52px}
+.btr.nm+.btr{background:none}
+.bttotal{height:56px;flex:none;background:#fff;border-top:.5px solid rgba(60,60,67,.29);display:flex;align-items:center;gap:6px;padding:0 16px;font-size:17px;letter-spacing:-.43px}
+.bttotal span{color:rgba(60,60,67,.6)}
+.bttotal b{font-weight:600}
 .bmenu{position:absolute;width:256px;max-height:780px;overflow-y:auto;border-radius:13px;background:rgba(242,242,242,.97);backdrop-filter:blur(30px);box-shadow:0 10px 50px rgba(0,0,0,.2);animation:mpop .18s ease}
 .bmenu button{display:flex;flex-direction:column;justify-content:center;width:100%;min-height:44px;padding:9px 16px;text-align:left;font-size:17px;letter-spacing:-.43px;border-top:.5px solid rgba(60,60,67,.29)!important}
 .bmenu button:first-child{border-top:0!important}
@@ -521,43 +531,47 @@ function addBagsTo(id,list){
  if(id==='clayton')complete('bag');
 }
 function bagTypeSheet(ids){
- const st={group:['Standard'],per:Object.fromEntries(ids.map(id=>[id,['Standard']])),q:''};
+ const st={group:['Standard'],per:Object.fromEntries(ids.map(id=>[id,{'Standard':0}]))};
  const pg=document.createElement('div');pg.className='layer page sheet-in';pg.dataset.id='bagtype';
  const plus='<svg width="13" height="13" viewBox="0 0 13 13" style="margin-right:6px"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
- const guestsHTML=()=>{const q=st.q.trim().toLowerCase();const vis=ids.filter(id=>!q||full(G(id)).toLowerCase().includes(q));
-  return vis.map(id=>{const g=G(id);const el=g.elite?`<span class="elite ${g.elite}">${g.elite==='mvp'?'MVP':'100k'}</span>`:'';
-   return `<div class="btc"><div class="btr nm"><span>Tripp, ${g.first}</span>${el}</div>${st.per[id].map(t=>`<div class="btr"><span>${t}</span></div>`).join('')}<button class="btr addt" data-b="addp:${id}">${plus}Add Another Bag Type</button></div>`}).join('')
-   ||`<p style="text-align:center;color:rgba(60,60,67,.6);font-size:17px;padding:24px 0">No guests match “${st.q.replace(/</g,'&lt;')}”</p>`};
+ const pl='<svg width="14" height="14" viewBox="0 0 14 14"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+ const mn='<svg width="14" height="14" viewBox="0 0 14 14"><path d="M1 7h12" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
+ const totals=()=>{let bags=0,guests=0;ids.forEach(id=>{const n=Object.values(st.per[id]).reduce((a,b)=>a+b,0);bags+=n;if(n)guests++});return{bags,guests}};
  const draw=()=>{
-  pg.innerHTML=`<div class="sb"><span>9:41 AM&nbsp;&nbsp;Tue Sep 14</span><span>100%</span></div><div class="pane"><div class="dhead"><button class="lnk reg" style="justify-self:start" data-b="cancel">Cancel</button><b>Select Bag Type</b><button class="lnk" style="justify-self:end;font-weight:600" data-b="submit">Submit</button></div>
+  const sc=pg.querySelector('.dbody');const keep=sc?sc.scrollTop:0;const t=totals();
+  pg.innerHTML=`<div class="sb"><span>9:41 AM&nbsp;&nbsp;Tue Sep 14</span><span>100%</span></div><div class="pane"><div class="dhead"><button class="lnk reg" style="justify-self:start" data-b="cancel">Cancel</button><b>Select Bag Type</b><button class="lnk" style="justify-self:end;font-weight:600;${t.bags?'':'color:rgba(60,60,67,.3)'}" data-b="submit" ${t.bags?'':'aria-disabled="true"'}>Submit</button></div>
   <div class="dbody"><div class="bt-h"><h4>Group Assign <button data-b="info" aria-label="About Group Assign"><svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9.8" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="11" cy="6.6" r="1.2" fill="currentColor"/><path d="M9 9.6h2.3v6.2M9 15.8h4.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></button></h4><p>Use the bag types to assign bags to all the guests</p></div>
-   <div class="btc">${st.group.map((t,i)=>`<div class="btr"><span>${t}</span><button class="lnk reg" data-b="reset:${i}">Reset</button></div>`).join('')}<button class="btr addt" data-b="addg">${plus}Add Another Bag Type</button></div>
+   <div class="btc">${st.group.map((t,i)=>`<div class="btr"><span>${t}</span><button class="lnk reg" data-b="all:${i}">Add 1 bag to All</button></div>`).join('')}<button class="btr addt" data-b="addg">${plus}Add Another Bag Type</button></div>
+   <p class="btnote">Most significant carrier: Alaska Airlines</p>
    <div class="bt-h" style="padding-top:20px"><h4>Selected Guests (${ids.length})</h4></div>
-   <div class="searchbox bt-search">${IC.search}<input id="bq" placeholder="Search guest’s first or last name" autocomplete="off" value="${st.q.replace(/"/g,'&quot;')}"></div>
-   <div id="btGuests">${guestsHTML()}</div></div></div>`;
-  pg.querySelector('#bq').addEventListener('input',e=>{st.q=e.target.value;pg.querySelector('#btGuests').innerHTML=guestsHTML()});
+   ${ids.map(id=>{const g=G(id);const el=g.elite?`<span class="elite ${g.elite}">${g.elite==='mvp'?'MVP':'100k'}</span>`:'';
+     return `<div class="btc"><div class="btr nm"><span>Tripp, ${g.first}</span>${el}</div>${Object.entries(st.per[id]).map(([ty,n])=>`<div class="btr stepr"><span>${ty}</span><span class="stp"><button data-b="dec:${id}:${ty}" ${n?'':'disabled'} aria-label="Remove one ${ty} bag">${mn}</button><span>${n}</span><button data-b="inc:${id}:${ty}" aria-label="Add one ${ty} bag">${pl}</button></span></div>`).join('')}<button class="btr addt" data-b="addp:${id}">${plus}Add Another Bag Type</button></div>`}).join('')}
+  </div><div class="bttotal"><span>Total</span><b>${t.bags} Bag${t.bags===1?'':'s'}, ${t.guests} Guest${t.guests===1?'':'s'}</b></div></div>`;
+  pg.querySelector('.dbody').scrollTop=keep;
  };
  function pick(anchor,exclude,onPick){
   closeOverlay();const p=devPos(anchor);const opts=BAGTYPES.filter(b=>!exclude.includes(b[0]));
   const sc=document.createElement('div');sc.className='scrim';
   const x=Math.min(p.x+160,744-264);let y=p.y+p.h-4;const h=Math.min(780,opts.reduce((a,b)=>a+(b[1]?64:44),0));if(y+h>1120)y=Math.max(60,1120-h);
-  sc.innerHTML=`<div class="bmenu" style="left:${x}px;top:${y}px;width:256px">${opts.map(b=>`<button data-t="${b[0]}">${b[0]}${b[1]?`<small>${b[1]}</small>`:''}</button>`).join('')}</div>`;
+  sc.innerHTML=`<div class="bmenu" style="left:${x}px;top:${y}px">${opts.map(b=>`<button data-t="${b[0]}">${b[0]}${b[1]?`<small>${b[1]}</small>`:''}</button>`).join('')}</div>`;
   sc.addEventListener('click',e=>{e.stopPropagation();const b=e.target.closest('[data-t]');closeOverlay();if(b)onPick(b.dataset.t)});
   D.appendChild(sc);
  }
- pg.addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;e.stopPropagation();const [a,v]=b.dataset.b.split(':');
+ pg.addEventListener('click',e=>{const b=e.target.closest('[data-b]');if(!b)return;e.stopPropagation();if(b.disabled)return;
+  const [a,v,w]=b.dataset.b.split(':');
   if(a==='cancel')back();
-  else if(a==='info')toast('Group Assign adds each bag type to every selected guest');
-  else if(a==='reset'){const t=st.group.splice(+v,1)[0];ids.forEach(id=>{const i=st.per[id].indexOf(t);if(i>-1)st.per[id].splice(i,1)});draw()}
-  else if(a==='addg')pick(b,st.group,t=>{st.group.push(t);ids.forEach(id=>st.per[id].push(t));draw()});
-  else if(a==='addp')pick(b,st.per[v],t=>{st.per[v].push(t);pg.querySelector('#btGuests').innerHTML=guestsHTML()});
+  else if(a==='info')toast('Group Assign adds bags of a type to every selected guest');
+  else if(a==='all'){const ty=st.group[+v];ids.forEach(id=>st.per[id][ty]=(st.per[id][ty]||0)+1);draw()}
+  else if(a==='inc'){st.per[v][w]++;draw()}
+  else if(a==='dec'){st.per[v][w]=Math.max(0,st.per[v][w]-1);draw()}
+  else if(a==='addg')pick(b,st.group,ty=>{st.group.push(ty);ids.forEach(id=>{if(!(ty in st.per[id]))st.per[id][ty]=0});draw()});
+  else if(a==='addp')pick(b,Object.keys(st.per[v]),ty=>{st.per[v][ty]=0;draw()});
   else if(a==='submit'){
-   const withBags=ids.filter(id=>st.per[id].length);
-   if(!withBags.length)return toast('Add a bag type before submitting');
-   withBags.forEach(id=>addBagsTo(id,st.per[id]));
-   const n=withBags.reduce((a,id)=>a+st.per[id].length,0);
+   const t=totals();if(!t.bags)return toast('Add at least one bag to submit');
+   const withBags=ids.filter(id=>Object.values(st.per[id]).some(n=>n));
+   withBags.forEach(id=>addBagsTo(id,Object.entries(st.per[id]).flatMap(([ty,n])=>Array(n).fill(ty))));
    popAll();S.select=false;S.picked.clear();renderList();withBags.forEach(flashCard);
-   toast(`Assigned ${n} bag${n>1?'s':''} to ${withBags.length} guest${withBags.length>1?'s':''}`);
+   toast(`Added ${t.bags} bag${t.bags>1?'s':''} for ${t.guests} guest${t.guests>1?'s':''}`);
   }
  });
  draw();D.appendChild(pg);S.stack.push(pg);
